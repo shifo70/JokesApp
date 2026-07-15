@@ -23,6 +23,6 @@ app.use((_req, res) => {
   res.status(404).json({ message: 'Endpoint not found.' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

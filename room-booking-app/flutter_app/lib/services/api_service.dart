@@ -1,11 +1,25 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/room.dart';
 
 class ApiService {
-  // Change this to your computer's IP when testing on a physical device/emulator
-  // Android emulator: use 10.0.2.2 instead of localhost
-  static const String baseUrl = 'http://10.0.2.2:3000';
+  /// Picks the correct API URL based on where Flutter is running.
+  static String get baseUrl {
+    if (kIsWeb) return 'http://localhost:3000';
+
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return 'http://10.0.2.2:3000';
+      case TargetPlatform.iOS:
+      case TargetPlatform.windows:
+      case TargetPlatform.macOS:
+      case TargetPlatform.linux:
+        return 'http://localhost:3000';
+      default:
+        return 'http://localhost:3000';
+    }
+  }
 
   static Map<String, String> _headers(String? token) {
     final headers = {'Content-Type': 'application/json'};

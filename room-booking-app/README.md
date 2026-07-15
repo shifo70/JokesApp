@@ -114,13 +114,43 @@ flutter run
 
 ### عنوان الـ API
 
-في `lib/services/api_service.dart`:
+التطبيق يختار العنوان تلقائياً حسب المنصة:
 
-| البيئة | baseUrl |
+| البيئة | العنوان |
 |--------|---------|
+| Flutter Web / Windows / macOS | `http://localhost:3000` |
 | Android Emulator | `http://10.0.2.2:3000` |
 | iOS Simulator | `http://localhost:3000` |
-| جهاز حقيقي | `http://YOUR_PC_IP:3000` |
+| جهاز حقيقي | `http://YOUR_PC_IP:3000` (عدّل في `api_service.dart`) |
+
+---
+
+## استكشاف الأخطاء
+
+### "Connection failed. Is the backend running?"
+
+1. **شغّل الـ Backend أولاً** (قبل Flutter):
+   ```bash
+   cd backend
+   npm install
+   npm start
+   ```
+   يجب أن ترى: `Server running on http://localhost:3000`
+
+2. **تأكد من MySQL:**
+   - MySQL Server شغّال في Workbench
+   - نفّذت `database/schema.sql`
+   - ملف `.env` فيه كلمة مرور MySQL الصحيحة
+
+3. **اختبر الـ API في المتصفح:**
+   افتح: http://localhost:3000  
+   يجب أن ترى: `{"message":"Room Booking API is running."}`
+
+4. **أعد تشغيل Flutter** بعد تشغيل Backend:
+   ```bash
+   cd flutter_app
+   flutter run -d chrome
+   ```
 
 ---
 
