@@ -51,14 +51,14 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
         data = await ApiService.updateContact(
           id: widget.contact!.id,
           fullName: _nameController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
+          phoneNumber: _phoneController.text,
           category: _category,
           isFavorite: _isFavorite,
         );
       } else {
         data = await ApiService.createContact(
           fullName: _nameController.text.trim(),
-          phoneNumber: _phoneController.text.trim(),
+          phoneNumber: _phoneController.text,
           category: _category,
           isFavorite: _isFavorite,
         );
@@ -74,8 +74,8 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       _showError(e.message);
-    } catch (_) {
-      _showError('Connection failed. Is the backend running?');
+    } catch (e) {
+      _showError('Could not save contact: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -119,13 +119,13 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
-                    hintText: '0788123456',
-                    helperText: 'Phone must be 10 digits, start with 07',
+                    hintText: '0712345678',
+                    helperText: 'Exactly 10 digits starting with 07',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
                   validator: (v) {
-                    final phone = (v ?? '').trim().replaceAll(RegExp(r'\s+'), '');
+                    final phone = ApiService.normalizePhone(v ?? '');
                     if (!RegExp(r'^07\d{8}$').hasMatch(phone)) {
                       return 'Must be 10 digits starting with 07';
                     }
@@ -138,32 +138,27 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  children: _categories.map((cat) {
-                    final selected = _category == cat;
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: ChoiceChip(
-                          label: Text(cat),
-                          selected: selected,
-                          onSelected: (_) => setState(() => _category = cat),
-                          selectedColor: const Color(0xFF1565C0),
-                          labelStyle: TextStyle(
-                            color: selected ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                ToggleButtons(
+                  isSelected: _categories.map((c) => c == _category).toList(),
+                  onPressed: (index) {
+                    setState(() => _category = _categories[index]);
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  selectedColor: Colors.white,
+                  fillColor: const Color(0xFF1565C0),
+                  constraints: const BoxConstraints(minHeight: 40, minWidth: 90),
+                  children: _categories
+                      .map((c) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(c),
+                          ))
+                      .toList(),
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Mark as favorite'),
                   value: _isFavorite,
-                  activeColor: const Color(0xFF1565C0),
                   onChanged: (v) => setState(() => _isFavorite = v),
                 ),
                 const SizedBox(height: 28),

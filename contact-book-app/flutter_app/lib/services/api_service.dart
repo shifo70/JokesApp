@@ -17,7 +17,11 @@ class ApiService {
 
   static Map<String, String> get _headers => {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       };
+
+  static String normalizePhone(String phone) =>
+      phone.trim().replaceAll(RegExp(r'\s+'), '');
 
   static Future<List<Contact>> getContacts() async {
     final response = await http.get(
@@ -28,10 +32,10 @@ class ApiService {
   }
 
   static Future<List<Contact>> searchByCategory(String category) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/contacts/search?category=$category'),
-      headers: _headers,
+    final uri = Uri.parse('$baseUrl/contacts/search').replace(
+      queryParameters: {'category': category},
     );
+    final response = await http.get(uri, headers: _headers);
     return _parseList(response);
   }
 
@@ -45,8 +49,8 @@ class ApiService {
       Uri.parse('$baseUrl/contacts'),
       headers: _headers,
       body: jsonEncode({
-        'full_name': fullName,
-        'phone_number': phoneNumber,
+        'full_name': fullName.trim(),
+        'phone_number': normalizePhone(phoneNumber),
         'category': category,
         'is_favorite': isFavorite,
       }),
@@ -65,8 +69,8 @@ class ApiService {
       Uri.parse('$baseUrl/contacts/$id'),
       headers: _headers,
       body: jsonEncode({
-        'full_name': fullName,
-        'phone_number': phoneNumber,
+        'full_name': fullName.trim(),
+        'phone_number': normalizePhone(phoneNumber),
         'category': category,
         'is_favorite': isFavorite,
       }),
@@ -85,9 +89,11 @@ class ApiService {
   static List<Contact> _parseList(http.Response response) {
     final data = _decode(response);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final list = data as List;
-      return list
-          .map((e) => Contact.fromJson(e as Map<String, dynamic>))
+      if (data is! List) {
+        throw ApiException('Unexpected server response (expected a list).', response.statusCode);
+      }
+      return data
+          .map((e) => Contact.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     }
     throw ApiException(_message(data), response.statusCode);
@@ -96,19 +102,32 @@ class ApiService {
   static Map<String, dynamic> _handleMap(http.Response response) {
     final data = _decode(response);
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return data as Map<String, dynamic>;
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) return Map<String, dynamic>.from(data);
+      return {'message': 'OK'};
     }
     throw ApiException(_message(data), response.statusCode);
   }
 
   static dynamic _decode(http.Response response) {
     if (response.body.isEmpty) return {};
-    return jsonDecode(response.body);
+    try {
+      return jsonDecode(response.body);
+    } catch (_) {
+      throw ApiException(
+        'Server returned invalid JSON (status ${response.statusCode}). Is the Contact Book backend running on port 3000?',
+        response.statusCode,
+      );
+    }
   }
 
   static String _message(dynamic data) {
     if (data is Map && data['message'] != null) {
-      return data['message'] as String;
+      final detail = data['detail'];
+      if (detail != null && detail.toString().isNotEmpty) {
+        return '${data['message']} ($detail)';
+      }
+      return data['message'].toString();
     }
     return 'Request failed';
   }

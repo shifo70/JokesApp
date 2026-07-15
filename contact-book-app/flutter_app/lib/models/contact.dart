@@ -16,13 +16,20 @@ class Contact {
   });
 
   factory Contact.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    final id = rawId is int ? rawId : int.parse(rawId.toString());
+
     return Contact(
-      id: json['id'] as int,
-      fullName: json['full_name'] as String,
-      phoneNumber: json['phone_number'] as String,
-      category: json['category'] as String,
-      isFavorite: json['is_favorite'] == true || json['is_favorite'] == 1,
-      displayTag: json['display_tag'] as String? ?? json['category'] as String,
+      id: id,
+      fullName: json['full_name']?.toString() ?? '',
+      phoneNumber: json['phone_number']?.toString() ?? '',
+      category: json['category']?.toString() ?? '',
+      isFavorite: json['is_favorite'] == true ||
+          json['is_favorite'] == 1 ||
+          json['is_favorite']?.toString() == '1',
+      displayTag: json['display_tag']?.toString() ??
+          json['category']?.toString() ??
+          '',
     );
   }
 }

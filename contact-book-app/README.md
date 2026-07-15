@@ -96,9 +96,24 @@ flutter run
 
 ## استكشاف الأخطاء
 
-إذا ظهر `Connection failed`:
+### لا يُنشأ Contact / Save لا يعمل
 
-1. تأكد أن Backend شغّال (`npm start`)
-2. افتح http://localhost:3000 في المتصفح
-3. تأكد أنك نفّذت `schema.sql` في Workbench
-4. تأكد من كلمة مرور MySQL في `.env`
+1. تأكد أنك تشغّل **Contact Book backend** (وليس Room Booking):
+   ```bash
+   cd contact-book-app/backend
+   cp .env.example .env
+   # ضع كلمة مرور MySQL الصحيحة
+   npm install
+   npm start
+   ```
+   يجب أن ترى: `MySQL connected` و `Server running on http://localhost:3000`
+
+2. افتح http://localhost:3000 في المتصفح — يجب أن ترى رسالة API.
+
+3. رقم الهاتف **يجب** أن يكون مثل `0712345678` (10 أرقام تبدأ بـ 07). أي رقم مكرر يُرفض.
+
+4. إذا كان عندك بيانات قديمة بالرقم التجريبي `0788123456`، احذف الصف من Workbench أو استخدم رقمًا مختلفًا.
+
+5. أعد تشغيل Flutter بعد تشغيل Backend.
+
+---

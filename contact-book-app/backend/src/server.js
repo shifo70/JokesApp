@@ -4,6 +4,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const db = require('./config/db');
 const contactRoutes = require('./routes/contacts');
 
 const app = express();
@@ -22,6 +23,19 @@ app.use((_req, res) => {
   res.status(404).json({ message: 'Endpoint not found.' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+async function start() {
+  try {
+    await db.init();
+    console.log('MySQL connected. Table contacts is ready.');
+  } catch (err) {
+    console.error('MySQL connection failed:', err.message);
+    console.error('Fix: start MySQL, set DB_PASSWORD in .env, then run schema.sql in Workbench.');
+    process.exit(1);
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+start();

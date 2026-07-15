@@ -17,7 +17,7 @@ router.get('/', async (_req, res) => {
     res.json(rows.map(withDisplayTag));
   } catch (err) {
     console.error('List contacts error:', err);
-    res.status(500).json({ message: 'Failed to fetch contacts.' });
+    res.status(500).json({ message: 'Failed to fetch contacts.', detail: err.message });
   }
 });
 
@@ -40,12 +40,16 @@ router.get('/search', async (req, res) => {
     res.json(rows.map(withDisplayTag));
   } catch (err) {
     console.error('Search contacts error:', err);
-    res.status(500).json({ message: 'Failed to search contacts.' });
+    res.status(500).json({ message: 'Failed to search contacts.', detail: err.message });
   }
 });
 
 /** POST /contacts — add contact */
 router.post('/', async (req, res) => {
+  if (!req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ message: 'Request body must be JSON.' });
+  }
+
   const { full_name, phone_number, category, is_favorite } = req.body;
 
   if (!full_name || !String(full_name).trim()) {
@@ -71,7 +75,7 @@ router.post('/', async (req, res) => {
     );
     if (existing.length > 0) {
       return res.status(409).json({
-        message: 'This phone number is already saved. Phone must be unique.',
+        message: `Phone ${phoneCheck.phone} is already saved. Use a different number.`,
       });
     }
 
@@ -88,15 +92,19 @@ router.post('/', async (req, res) => {
       is_favorite: favorite,
     });
 
+    console.log('Created contact:', contact);
     res.status(201).json({ message: 'Contact saved successfully.', contact });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({
-        message: 'This phone number is already saved. Phone must be unique.',
+        message: `Phone ${phoneCheck.phone} is already saved. Use a different number.`,
       });
     }
     console.error('Create contact error:', err);
-    res.status(500).json({ message: 'Failed to create contact.' });
+    res.status(500).json({
+      message: 'Failed to create contact. Check MySQL connection / .env password.',
+      detail: err.message,
+    });
   }
 });
 
@@ -128,7 +136,7 @@ router.put('/:id', async (req, res) => {
     );
     if (dup.length > 0) {
       return res.status(409).json({
-        message: 'This phone number is already saved. Phone must be unique.',
+        message: `Phone ${phoneCheck.phone} is already saved. Use a different number.`,
       });
     }
 
@@ -153,11 +161,11 @@ router.put('/:id', async (req, res) => {
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({
-        message: 'This phone number is already saved. Phone must be unique.',
+        message: `Phone ${phoneCheck.phone} is already saved. Use a different number.`,
       });
     }
     console.error('Update contact error:', err);
-    res.status(500).json({ message: 'Failed to update contact.' });
+    res.status(500).json({ message: 'Failed to update contact.', detail: err.message });
   }
 });
 
@@ -173,7 +181,7 @@ router.delete('/:id', async (req, res) => {
     res.json({ message: 'Contact deleted successfully.' });
   } catch (err) {
     console.error('Delete contact error:', err);
-    res.status(500).json({ message: 'Failed to delete contact.' });
+    res.status(500).json({ message: 'Failed to delete contact.', detail: err.message });
   }
 });
 
