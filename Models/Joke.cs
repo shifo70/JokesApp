@@ -6,8 +6,11 @@ namespace JokesApp.Models
     {
         public int Id { get; set; }
         public string JokesQuestion { get; set; }
-        public string JokesAnswer { get; set; }
+        public string JokesAnswer  { get; set; }
         public int Likes { get; set; }
+        public int Dislikes { get; set; }
+        public string UserId { get; set; }
+        public string UserName { get; set; }
 
         public List<Comment> Comments { get; set; } = new List<Comment>();
         public List<JokeLike> JokeLikes { get; set; } = new List<JokeLike>();
