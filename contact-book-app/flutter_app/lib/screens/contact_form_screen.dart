@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/contact.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class ContactFormScreen extends StatefulWidget {
   final Contact? contact;
@@ -68,7 +69,7 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(data['message'] as String? ?? 'Saved'),
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.green.shade700,
         ),
       );
       Navigator.of(context).pop(true);
@@ -90,83 +91,133 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.surface,
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Contact' : '+ Add Contact'),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person_outline),
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 16,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Name is required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    hintText: '0712345678',
-                    helperText: 'Exactly 10 digits starting with 07',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone_outlined),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Name is required'
+                            : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone Number',
+                          hintText: '0712345678',
+                          helperText: 'Exactly 10 digits starting with 07',
+                          prefixIcon: Icon(Icons.phone_outlined),
+                        ),
+                        validator: (v) {
+                          final phone = ApiService.normalizePhone(v ?? '');
+                          if (!RegExp(r'^07\d{8}$').hasMatch(phone)) {
+                            return 'Must be 10 digits starting with 07';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 22),
+                      const Text(
+                        'Category',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: List.generate(_categories.length, (index) {
+                          final cat = _categories[index];
+                          final selected = _category == cat;
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                right: index == _categories.length - 1 ? 0 : 8,
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () => setState(() => _category = cat),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? AppTheme.primary
+                                        : const Color(0xFFEEF2F8),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    cat,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: selected
+                                          ? Colors.white
+                                          : const Color(0xFF334155),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text(
+                          'Mark as favorite',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        value: _isFavorite,
+                        activeColor: AppTheme.primary,
+                        onChanged: (v) => setState(() => _isFavorite = v),
+                      ),
+                    ],
                   ),
-                  validator: (v) {
-                    final phone = ApiService.normalizePhone(v ?? '');
-                    if (!RegExp(r'^07\d{8}$').hasMatch(phone)) {
-                      return 'Must be 10 digits starting with 07';
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Category',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                ),
-                const SizedBox(height: 10),
-                ToggleButtons(
-                  isSelected: _categories.map((c) => c == _category).toList(),
-                  onPressed: (index) {
-                    setState(() => _category = _categories[index]);
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  selectedColor: Colors.white,
-                  fillColor: const Color(0xFF1565C0),
-                  constraints: const BoxConstraints(minHeight: 40, minWidth: 90),
-                  children: _categories
-                      .map((c) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Text(c),
-                          ))
-                      .toList(),
-                ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Mark as favorite'),
-                  value: _isFavorite,
-                  onChanged: (v) => setState(() => _isFavorite = v),
-                ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
                 FilledButton(
                   onPressed: _loading ? null : _save,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF1565C0),
+                    backgroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: _loading
                       ? const SizedBox(
@@ -181,8 +232,8 @@ class _ContactFormScreenState extends State<ContactFormScreen> {
                           'SAVE CONTACT',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
                           ),
                         ),
                 ),

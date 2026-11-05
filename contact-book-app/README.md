@@ -31,17 +31,21 @@ contact-book-app/
 
 ---
 
-## 2. Backend
+## 2. Backend (متصل بـ MySQL)
 
 ```bash
 cd backend
 cp .env.example .env
 ```
 
-عدّل كلمة مرور MySQL في `.env`:
+عدّل `.env` ليطابق MySQL Workbench:
 
 ```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
 DB_PASSWORD=YOUR_MYSQL_PASSWORD
+DB_NAME=contact_book_db
 ```
 
 ```bash
@@ -49,7 +53,13 @@ npm install
 npm start
 ```
 
-السيرفر: http://localhost:3000
+عند التشغيل بنجاح ترى:
+```
+MySQL connected. Table contacts is ready.
+Server running on http://localhost:3000
+```
+
+> السيرفر ينشئ قاعدة البيانات والجدول تلقائياً إن لم يكونا موجودين (طالما بيانات `.env` صحيحة).
 
 ---
 

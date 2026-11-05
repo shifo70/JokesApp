@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/contact_list_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const ContactBookApp());
@@ -13,10 +14,7 @@ class ContactBookApp extends StatelessWidget {
     return MaterialApp(
       title: 'My Contacts',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1565C0)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       home: const ContactListScreen(),
     );
   }
